@@ -18,6 +18,73 @@ export interface Expense {
 export class ExpensesService {
   private base = 'http://localhost:3001/expenses';
 
+  // Fallback dummy data
+  private dummyExpenses: Expense[] = [
+    {
+      id: 1,
+      category: 'groceries',
+      amount: 120,
+      currency: 'USD',
+      amountUsd: 120,
+      date: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+      receipt: null,
+    },
+    {
+      id: 2,
+      category: 'gas',
+      amount: 50,
+      currency: 'USD',
+      amountUsd: 50,
+      date: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+      receipt: null,
+    },
+    {
+      id: 3,
+      category: 'entertainment',
+      amount: 45,
+      currency: 'USD',
+      amountUsd: 45,
+      date: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+      receipt: null,
+    },
+    {
+      id: 4,
+      category: 'shopping',
+      amount: 200,
+      currency: 'USD',
+      amountUsd: 200,
+      date: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+      receipt: null,
+    },
+    {
+      id: 5,
+      category: 'transport',
+      amount: 35,
+      currency: 'USD',
+      amountUsd: 35,
+      date: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+      receipt: null,
+    },
+    {
+      id: 6,
+      category: 'food',
+      amount: 85,
+      currency: 'USD',
+      amountUsd: 85,
+      date: new Date(Date.now() - 12 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+      receipt: null,
+    },
+    {
+      id: 7,
+      category: 'rent',
+      amount: 1200,
+      currency: 'USD',
+      amountUsd: 1200,
+      date: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+      receipt: null,
+    },
+  ];
+
   constructor(private http: HttpClient, private offline: OfflineService) {}
 
   list(): Observable<Expense[]> {
@@ -26,20 +93,31 @@ export class ExpensesService {
   }
 
   paginatedList(page: number, limit: number): Observable<Expense[]> {
-    if (!this.offline.isOnline())
-      return of(this.getCachedList().slice((page - 1) * limit, page * limit));
+    const cached = this.getCachedList();
+    const dataSource = cached.length > 0 ? cached : this.dummyExpenses;
+
+    if (!this.offline.isOnline()) {
+      return of(dataSource.slice((page - 1) * limit, page * limit));
+    }
+
     const params = {
       _page: page.toString(),
       _limit: limit.toString(),
       _sort: 'date',
       _order: 'desc',
     };
+
     return this.http.get<Expense[]>(this.base, { params }).pipe(
       tap((v) => {
-        // Optionally cache only first page
-        if (page === 1) this.cacheList(v);
+        // Cache all pages
+        if (page === 1) {
+          this.cacheList(v);
+        }
       }),
-      catchError((_) => of(this.getCachedList().slice((page - 1) * limit, page * limit)))
+      catchError((_) => {
+        // Return cached or dummy data on error
+        return of(dataSource.slice((page - 1) * limit, page * limit));
+      })
     );
   }
 
