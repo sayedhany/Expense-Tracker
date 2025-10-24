@@ -68,7 +68,7 @@
 
 		<!-- Expense List -->
 		@if (!isLoading() && !error()) {
-			<ul class="space-y-3">
+			<ul class="space-y-3 p-2 md:p-0">
 				@for (expense of displayedExpenses(); track expense.id) {
 					<li class="flex items-center justify-between bg-white rounded-xl p-4 shadow-sm hover:shadow-md transition-shadow mb-2">
 						<div class="flex items-center gap-3">
