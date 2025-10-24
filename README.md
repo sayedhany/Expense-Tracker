@@ -2,6 +2,16 @@
 
 A modern expense tracking application built with Angular 18, featuring real-time currency conversion, smart filtering, pagination, and local storage persistence.
 
+## 🌐 Live Demo
+
+**🚀 [View Live Application](https://expense-tracker-sayed.netlify.app/)**
+
+**📦 [GitHub Repository](https://github.com/sayedhany/Expense-Tracker)**
+
+The app is automatically deployed via CI/CD pipeline using Netlify.
+
+[![Netlify Status](https://api.netlify.com/api/v1/badges/your-badge-id/deploy-status)](https://app.netlify.com/sites/expense-tracker-sayed/deploys)
+
 ## 📋 About This Project
 
 This is a full-featured expense management application that helps users track their expenses with the following capabilities:
@@ -34,8 +44,8 @@ Follow these steps to run the application:
 #### 1. Install Dependencies
 
 ```bash
-npm i -g pnpm 
-then 
+npm i -g pnpm
+then
 pnpm install
 # or if you're using npm
 npm install
