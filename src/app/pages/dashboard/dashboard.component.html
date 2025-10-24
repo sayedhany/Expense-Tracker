@@ -1,0 +1,127 @@
+<div class="min-h-screen bg-white md:px-4 relative ">
+	<header class="mb-6 ">
+		<div class="flex h-[45vh] p-7 rounded-md items-start bg-blue-600 justify-between">
+			<div class="flex items-center gap-3">
+				<img [src]="userService.userProfile().profileImage" class="w-12 h-12 rounded-full shadow-sm object-cover" alt="Profile" />
+				<div>
+					<div class="text-sm text-gray-200">{{ userService.getGreeting() }}</div>
+					<div class="text-lg font-semibold text-white">{{ userService.userProfile().name }}</div>
+				</div>
+			</div>
+			<div>
+				<div class="relative inline-block">
+					<select (change)="onPeriodChange($event)" [value]="selectedPeriod()" class="appearance-none bg-white text-sm rounded-2xl px-4 py-2 pr-10 shadow-sm">
+						@for (p of periodOptions; track $index) {
+							<option [value]="p">{{ p }}</option>
+						}
+					</select>
+					<i class="fas fa-chevron-down absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none"></i>
+				</div>
+			</div>
+		</div>
+	</header>
+
+	<section class="mb-6 absolute w-[80%] left-[11%] top-[7rem]">
+		<div class="bg-blue-400 text-white rounded-xl p-5 shadow-md">
+			<div class="flex justify-between items-start">
+				<div>
+					<div class="text-sm opacity-80">Total Balance (USD)</div>
+					<div class="text-3xl font-bold mt-2">$ {{ totalBalance() | number:'1.2-2' }}</div>
+				</div>
+				<div class="text-right">
+					<div class="text-sm">{{ selectedPeriod() }}</div>
+				</div>
+			</div>
+			<div class="mt-4 grid grid-cols-2 gap-4">
+				<div class="bg-blue-500 bg-opacity-30 p-3 rounded-lg">
+					<div class="text-sm"><i class="far fa-arrow-down inline-block p-2 rounded-full bg-blue-400 mr-1"></i>Income</div>
+					<div class="font-semibold mt-1">$ {{ income() | number:'1.2-2' }}</div>
+				</div>
+				<div class="bg-blue-500 bg-opacity-20 p-3 rounded-lg">
+					<div class="text-sm"><i class="fal fa-arrow-up inline-block p-2 rounded-full bg-blue-400 mr-1"></i>Expenses</div>
+					<div class="font-semibold mt-1">$ {{ expenses() | number:'1.2-2' }}</div>
+				</div>
+			</div>
+		</div>
+	</section>
+
+	<section class="mt-[4rem] pb-5 max-h-[50vh] overflow-y-auto" (scroll)="onScroll($event)">
+		<div class="flex items-center justify-between mb-3">
+			<h3 class="text-lg font-semibold">Recent Expenses</h3>
+			<a class="text-sm text-gray-500" href="#">see all</a>
+		</div>
+
+		<!-- Loading State -->
+		@if (isLoading()) {
+			<div class="flex justify-center items-center py-12">
+				<div class="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600"></div>
+			</div>
+		}
+
+		<!-- Error State -->
+		@if (error()) {
+			<div class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-4">
+				<p class="text-sm">{{ error() }}</p>
+				<button (click)="loadAllExpenses()" class="mt-2 text-xs underline">Try Again</button>
+			</div>
+		}
+
+		<!-- Expense List -->
+		@if (!isLoading() && !error()) {
+			<ul class="space-y-3">
+				@for (expense of displayedExpenses(); track expense.id) {
+					<li class="flex items-center justify-between bg-white rounded-xl p-4 shadow-sm hover:shadow-md transition-shadow">
+						<div class="flex items-center gap-3">
+							<div class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center text-xl">
+								{{ getCategoryIcon(expense.category) }}
+							</div>
+							<div>
+								<div class="font-semibold text-gray-900 capitalize">{{ expense.category }}</div>
+								<div class="text-sm text-gray-400">Manually</div>
+							</div>
+						</div>
+						<div class="text-right">
+							<div class="text-gray-900 font-semibold text-base">
+								- ${{ expense.amountUsd ?? expense.amount | number:'1.0-0' }}
+							</div>
+							<div class="text-xs text-gray-400">{{ expense.date | date:'MMM d, h:mm a' }}</div>
+						</div>
+					</li>
+				}
+				@empty {
+					<li class="text-center text-gray-400 py-12">
+						<div class="text-4xl mb-3">📊</div>
+						<p>No expenses found for {{ selectedPeriod() }}.</p>
+					</li>
+				}
+			</ul>
+
+			<!-- Load More Button -->
+			@if (hasMore() && displayedExpenses().length > 0) {
+				<div class="flex justify-center items-center py-4">
+					<button 
+						(click)="loadMoreExpenses()" 
+						class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+					>
+						Load More
+					</button>
+				</div>
+			}
+
+			<!-- No More Items -->
+			@if (!hasMore() && displayedExpenses().length > 0) {
+				<div class="flex justify-center items-center py-3">
+					<span class="text-gray-400 text-sm">No more expenses</span>
+				</div>
+			}
+		}
+	</section>
+
+	<nav class="bg-white  shadow-lg p-3 flex items-center justify-between">
+		<button class="cursor-pointer text-blue-500"><i class="text-2xl fas fa-home-alt"></i></button>
+		<button class="cursor-pointer text-gray-400"><i class="text-2xl fal fa-signal-alt-3"></i></button>
+		<button (click)="navigate()" class="cursor-pointer bg-blue-600 text-white w-12 h-12 rounded-full flex items-center justify-center shadow-md"><i class="text-2xl fas fa-plus"></i></button>
+		<button class="cursor-pointer text-gray-400"><i class="text-2xl far fa-wallet"></i></button>
+		<button class="cursor-pointer text-gray-400"><i class="text-2xl far fa-user"></i></button>
+	</nav>
+</div>
